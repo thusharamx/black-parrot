@@ -95,5 +95,13 @@
   ignore = dirty
 
 [submodule "external/dtc"]
-	path = external/dtc
-	url = https://git.kernel.org/pub/scm/utils/dtc/dtc.git
+  path = external/dtc
+  url = https://git.kernel.org/pub/scm/utils/dtc/dtc.git
+  branch = master
+  ignore = dirty
+
+[submodule "external/HardFloat"]
+  path = external/HardFloat
+  url = https://github.com/bsg-external/HardFloat.git
+  branch = master
+  ignore = dirty
