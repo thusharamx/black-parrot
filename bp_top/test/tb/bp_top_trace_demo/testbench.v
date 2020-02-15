@@ -27,6 +27,7 @@ module testbench
    , parameter npc_trace_p                 = 0
    , parameter dcache_trace_p              = 0
    , parameter vm_trace_p                  = 0
+   , parameter core_profile_p              = 0
    , parameter preload_mem_p               = 0
    , parameter load_nbf_p                  = 0
    , parameter skip_init_p                 = 0
@@ -343,6 +344,41 @@ bind bp_be_top
         ,.mem_cmd_v_i(mem_cmd_v_o)
         ,.mem_cmd_ready_i(mem_cmd_ready_i)
         );
+
+  bind bp_core
+    bp_nonsynth_core_profiler
+     #(.bp_params_p(bp_params_p))
+     core_profiler
+      (.clk_i(clk_i & (testbench.core_profile_p == 1))
+       ,.reset_i(reset_i)
+       ,.freeze_i(be.be_checker.scheduler.int_regfile.cfg_bus.freeze)
+  
+       ,.mhartid_i(be.be_checker.scheduler.int_regfile.cfg_bus.core_id)
+
+       ,.fe_wait_stall(fe.pc_gen.is_wait & ~fe.pc_gen.mem_cmd_v_o)
+
+       ,.itlb_miss(fe.mem.itlb_miss_r)
+       ,.icache_miss(fe.mem.icache.cache_miss_o)
+       ,.branch_override(fe.pc_gen.ovr_taken | fe.pc_gen.ovr_ntaken)
+
+       ,.fe_cmd(fe.pc_gen.fe_cmd_yumi_o & ~fe.pc_gen.attaboy_v)
+
+       ,.cmd_fence(be.be_checker.director.fe_cmd_v_o | be.be_checker.director.suppress_iss_o)
+
+       ,.branch_mispredict(be.be_checker.scheduler.npc_mismatch)
+       ,.dependency_stall(~be.be_checker.scheduler.dispatch_v_i)
+
+       ,.dtlb_miss(be.be_mem.dtlb_miss_r)
+       ,.dcache_miss(be.be_mem.dcache.cache_miss_o)
+       ,.exception(be.be_checker.director.trap_pkt.exception)
+       ,.eret(be.be_checker.director.trap_pkt.eret)
+       ,.interrupt(be.be_checker.director.trap_pkt._interrupt)
+
+       ,.reservation(be.be_calculator.reservation_n)
+       ,.commit_pkt(be.be_calculator.commit_pkt)
+       ,.trap_pkt(be.be_mem.csr.trap_pkt_o)
+       );
+
 
 wire [io_noc_cord_width_p-1:0] dst_cord_lo = 1;
 
